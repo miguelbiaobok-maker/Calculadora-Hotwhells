@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Hot Wheels Ultimate</title>
+    <style>
+        :root {
+            --primary-red: #E60012;
+            --primary-yellow: #FFD100;
+            --dark-carbon: #1A1A1A;
+            --light-gray: #F4F4F4;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #111 0%, #2b2b2b 100%);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 4px solid var(--primary-yellow);
+            padding-bottom: 10px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        header h1 {
+            color: var(--primary-yellow);
+            text-transform: uppercase;
+            font-style: italic;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            margin: 0;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--dark-carbon);
+            border: 3px solid var(--primary-red);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-yellow);
+            font-size: 1.2rem;
+            border-bottom: 2px solid #333;
+            padding-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        /* CALCULADORA */
+        .calculator {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #calc-screen {
+            width: 100%;
+            height: 50px;
+            background: #000;
+            color: var(--primary-yellow);
+            font-size: 1.8rem;
+            text-align: right;
+            padding: 5px 15px;
+            box-sizing: border-box;
+            border: 2px solid #444;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-family: monospace;
+        }
+
+        .calc-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .calc-btn {
+            background: #333;
+            color: #fff;
+            border: none;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .calc-btn:hover {
+            background: #444;
+        }
+
+        .calc-btn.operator {
+            background: var(--primary-red);
+        }
+
+        .calc-btn.operator:hover {
+            background: #ff1a2c;
+        }
+
+        .calc-btn.equals {
+            background: var(--primary-yellow);
+            color: #000;
+            grid-column: span 2;
+        }
+
+        .calc-btn.equals:hover {
+            background: #ffde33;
+        }
+
+        /* HISTÓRICO */
+        #history-list {
+            list-style: none;
+            padding: 0;
+            max-height: 150px;
+            overflow-y: auto;
+            margin: 0;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        #history-list li {
+            padding: 4px 0;
+            border-bottom: 1px dashed #444;
+        }
+
+        /* GALERIA DE CARROS */
+        .car-gallery {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 10px 0;
+            margin-top: 15px;
+        }
+
+        .car-gallery img {
+            width: 100px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 2px solid var(--primary-yellow);
+            flex-shrink: 0;
+            transition: transform 0.2s;
+        }
+
+        .car-gallery img:hover {
+            transform: scale(1.1);
+        }
+
+        /* ÁREA DE DESENHO */
+        .drawing-card {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 768px) {
+            .drawing-card {
+                grid-column: span 1;
+            }
+        }
+
+        .tools {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        canvas {
+            background: #fff;
+            border-radius: 6px;
+            width: 100%;
+            height: 250px;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        /* MINI JOGO */
+        .game-card {
+            grid-column: span 2;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .game-card {
+                grid-column: span 1;
+            }
+        }
+
+        #gameCanvas {
+            background: #222;
+            border: 2px solid var(--primary-yellow);
+            border-radius: 6px;
+            display: block;
+            margin: 0 auto 10px auto;
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔥 Calculadora & Pista Hot Wheels 🔥</h1>
+        <p>Velocidade, Matemática e Diversão!</p>
+    </header>
+
+    <div class="container">
+        <!-- CALCULADORA + HISTÓRICO -->
+        <div class="card calculator">
+            <h2>Calculadora Hot Wheels</h2>
+            <div id="calc-screen">0</div>
+            <div class="calc-buttons">
+                <button class="calc-btn" onclick="clearCalc()">C</button>
+                <button class="calc-btn" onclick="appendValue('/')">/</button>
+                <button class="calc-btn" onclick="appendValue('*')">×</button>
+                <button class="calc-btn operator" onclick="appendValue('-')">-</button>
+                <button class="calc-btn" onclick="appendValue('7')">7</button>
+                <button class="calc-btn" onclick="appendValue('8')">8</button>
+                <button class="calc-btn" onclick="appendValue('9')">9</button>
+                <button class="calc-btn operator" onclick="appendValue('+')">+</button>
+                <button class="calc-btn" onclick="appendValue('4')">4</button>
+                <button class="calc-btn" onclick="appendValue('5')">5</button>
+                <button class="calc-btn" onclick="appendValue('6')">6</button>
+                <button class="calc-btn" onclick="appendValue('.')">.</button>
+                <button class="calc-btn" onclick="appendValue('1')">1</button>
+                <button class="calc-btn" onclick="appendValue('2')">2</button>
+                <button class="calc-btn" onclick="appendValue('3')">3</button>
+                <button class="calc-btn" onclick="appendValue('0')">0</button>
+                <button class="calc-btn equals" onclick="calculate()">=</button>
+            </div>
+
+            <h2 style="margin-top: 20px;">Histórico</h2>
+            <ul id="history-list"></ul>
+        </div>
+
+        <!-- GARAGEM / IMAGENS -->
+        <div class="card">
+            <h2>Garagem Hot Wheels</h2>
+            <p>Carros oficiais da velocidade:</p>
+            <div class="car-gallery">
+                <img src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?w=300" alt="Carro Hot Wheels 1">
+                <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=300" alt="Carro Hot Wheels 2">
+                <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=300" alt="Carro Hot Wheels 3">
+                <img src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?w=300" alt="Carro Hot Wheels 4">
+            </div>
+            <p style="font-size: 0.85rem; color: #aaa; margin-top: 15px;">Use a calculadora para planejar sua coleção ou calcular a velocidade das suas pistas!</p>
+        </div>
+
+        <!-- ÁREA DE DESENHO -->
+        <div class="card drawing-card">
+            <h2>Área de Desenho (Customize seu Carro/Pista)</h2>
+            <div class="tools">
+                <label>Cor: <input type="color" id="colorPicker" value="#E60012"></label>
+                <label>Espessura: <input type="range" id="brushSize" min="1" max="20" value="5"></label>
+                <button class="calc-btn" style="padding: 5px 10px; font-size: 0.9rem;" onclick="clearCanvas()">Limpar Tela</button>
+            </div>
+            <canvas id="drawCanvas"></canvas>
+        </div>
+
+        <!-- MINI JOGO -->
+        <div class="card game-card">
+            <h2>Mini Jogo: Desvie do Obstáculo!</h2>
+            <p style="font-size: 0.9rem; margin-top:0;">Use as setas <strong>Esquerda</strong> e <strong>Direita</strong> para mover o carrinho e desviar dos blocos.</p>
+            <canvas id="gameCanvas" width="400" height="200"></canvas>
+            <button class="calc-btn equals" style="margin: 0 auto; display: block;" onclick="startGame()">Iniciar / Reiniciar Jogo</button>
+        </div>
+    </div>
+
+    <script>
+        /* --- CALCULADORA --- */
+        let screen = document.getElementById('calc-screen');
+        let historyList = document.getElementById('history-list');
+
+        function appendValue(val) {
+            if (screen.innerText === '0' && val !== '.') {
+                screen.innerText = val;
+            } else {
+                screen.innerText += val;
+            }
+        }
+
+        function clearCalc() {
+            screen.innerText = '0';
+        }
+
+        function calculate() {
+            try {
+                let expression = screen.innerText;
+                let result = eval(expression);
+                screen.innerText = result;
+                
+                // Adicionar ao histórico
+                let li = document.createElement('li');
+                li.innerText = `${expression} = ${result}`;
+                historyList.prepend(li);
+            } catch (error) {
+                screen.innerText = 'Erro';
+            }
+        }
+
+        /* --- ÁREA DE DESENHO --- */
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let painting = false;
+
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 250;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function startPosition(e) {
+            painting = true;
+            draw(e);
+        }
+
+        function endPosition() {
+            painting = false;
+            ctx.beginPath();
+        }
+
+        function draw(e) {
+            if (!painting) return;
+            ctx.lineWidth = document.getElementById('brushSize').value;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = document.getElementById('colorPicker').value;
+
+            let rect = canvas.getBoundingClientRect();
+            let x = (e.clientX || e.touches[0].clientX) - rect.left;
+            let y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mousemove', draw);
+
+        canvas.addEventListener('touchstart', startPosition);
+        canvas.addEventListener('touchend', endPosition);
+        canvas.addEventListener('touchmove', draw);
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        /* --- MINI JOGO --- */
+        const gCanvas = document.getElementById('gameCanvas');
+        const gCtx = gCanvas.getContext('2d');
+        let gameInterval;
+        let carX = 180;
+        let obstacleY = -30;
+        let obstacleX = Math.random() * 360;
+        let score = 0;
+        let gameRunning = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            if (e.key === 'ArrowLeft' && carX > 0) {
+                carX -= 20;
+            } else if (e.key === 'ArrowRight' && carX < 360) {
+                carX += 20;
+            }
+        });
+
+        function startGame() {
+            carX = 180;
+            obstacleY = -30;
+            obstacleX = Math.random() * 360;
+            score = 0;
+            gameRunning = true;
+            clearInterval(gameInterval);
+            gameInterval = setInterval(updateGame, 1000 / 30);
+        }
+
+        function updateGame() {
+            gCtx.clearRect(0, 0, gCanvas.width, gCanvas.height);
+
+            // Desenhar Carrinho
+            gCtx.fillStyle = '#E60012';
+            gCtx.fillRect(carX, 160, 40, 25);
+            gCtx.fillStyle = '#FFD100';
+            gCtx.fillRect(carX + 5, 165, 30, 15); // Detalhe
+
+            // Desenhar Obstáculo
+            gCtx.fillStyle = '#00ffcc';
+            gCtx.fillRect(obstacleX, obstacleY, 40, 20);
+
+            obstacleY += 6;
+
+            // Reiniciar obstáculo
+            if (obstacleY > gCanvas.height) {
+                obstacleY = -20;
+                obstacleX = Math.random() * (gCanvas.width - 40);
+                score += 10;
+            }
+
+            // Colisão
+            if (
+                obstacleY + 20 >= 160 &&
+                obstacleY <= 185 &&
+                obstacleX + 40 >= carX &&
+                obstacleX <= carX + 40
+            ) {
+                gameRunning = false;
+                clearInterval(gameInterval);
+                gCtx.fillStyle = 'white';
+                gCtx.font = '20px Arial';
+                gCtx.fillText('FIM DE JOGO!', 130, 100);
+            }
+
+            // Placar
+            gCtx.fillStyle = 'white';
+            gCtx.font = '14px Arial';
+            gCtx.fillText(`Pontos: ${score}`, 10, 20);
+        }
+    </script>
+</body>
+</html>
